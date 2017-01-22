@@ -8,18 +8,191 @@
 
 import UIKit
 
-class ViewController: UIViewController {
+class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextFieldDelegate {
 
+    @IBOutlet weak var imagePickerView: UIImageView!
+    @IBOutlet weak var cameraButton: UIBarButtonItem!
+    @IBOutlet weak var topTextField: UITextField!
+    @IBOutlet weak var bottomTextField: UITextField!
+    @IBOutlet weak var bottomTextGapFromToolbar: NSLayoutConstraint!
+    @IBOutlet weak var shareMemeButton: UIBarButtonItem!
+
+    let topPlaceholderText = "TOP"
+    let bottomPlaceholderText = "BOTTOM"
+    
+    struct Meme {
+        let topText: String
+        let bottomText: String
+        let originalImage: UIImage
+        let memedImage: UIImage
+    }
+    
+    @IBAction func shareMeme(_ sender: Any) {
+        // Generate a memed image
+        let memedImage = generateMemedImage()
+        
+        let activityController = UIActivityViewController(activityItems: [memedImage], applicationActivities: nil)
+        present(activityController, animated: true, completion: nil)
+        
+        activityController.completionWithItemsHandler = {(activity, completed, items, error) in
+        
+            // Doesn't seem to need help from me to do this. Will leave here since it might be needed later
+            // Otherwise you end up with two saved versions when you do a save from the activity view.
+            //    self.save()
+        }
+    }
+    
+    // The forums say that saving will be complete in v2.0?
+    func save() {
+        let memedImage = generateMemedImage()
+        
+        let meme = Meme(topText: topTextField.text!, bottomText: bottomTextField.text!, originalImage: imagePickerView.image!, memedImage: memedImage)
+        
+        UIImageWriteToSavedPhotosAlbum(meme.memedImage, nil, nil, nil)
+        
+    }
+    
+    func generateMemedImage() -> UIImage {
+        UIGraphicsBeginImageContext(self.view.frame.size)
+        view.drawHierarchy(in: self.view.frame, afterScreenUpdates: true)
+        let memedImage: UIImage = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        
+        return memedImage
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+        topTextField.delegate = self
+        bottomTextField.delegate = self
+        
+        shareMemeButton.isEnabled = false
+        
+        
+     
+    }
+    
+    func getTextAttributes() -> [String:Any] {
+        let memeTextAttributes: [String:Any] = [
+            NSStrokeColorAttributeName: UIColor.black,
+            NSForegroundColorAttributeName: UIColor.white,
+            NSFontAttributeName: UIFont(name: "HelveticaNeue-CondensedBlack", size: 40)!,
+            NSStrokeWidthAttributeName: -3.0,
+            
+            ];
+        return memeTextAttributes
+
+    }
+    
+    
+    func getAttributedString(string: String) -> NSAttributedString {
+        return NSAttributedString(string: string, attributes: getTextAttributes())
+    
+    
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        subscribeToKeyboardNotifications()
+        cameraButton.isEnabled = UIImagePickerController.isSourceTypeAvailable(.camera)
+        
+        // Set up text attributes
+        let memeTextAttributes = getTextAttributes()
+        
+        topTextField.defaultTextAttributes = memeTextAttributes
+        bottomTextField.defaultTextAttributes = memeTextAttributes
+        
+        topTextField.attributedPlaceholder = getAttributedString(string: topPlaceholderText)
+        bottomTextField.attributedPlaceholder = getAttributedString(string: bottomPlaceholderText)
+        
+        
+        // The alignment has to be set after the defaultTextAttributes property
+        topTextField.textAlignment = NSTextAlignment.center
+        bottomTextField.textAlignment = NSTextAlignment.center
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        unsubscribeToKeyboardNotifications()
+    }
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
+    }
+    
+    func textFieldDidBeginEditing(_ textField: UITextField) {
+        textField.placeholder = ""
+    }
+    
+    func textFieldShouldEndEditing(_ textField: UITextField) -> Bool {
+        
+        if textField.text == "" {
+            if bottomTextField.isFirstResponder {
+                bottomTextField.attributedPlaceholder = getAttributedString(string: bottomPlaceholderText)
+            } else if topTextField.isFirstResponder {
+                topTextField.attributedPlaceholder = getAttributedString(string: topPlaceholderText)
+            }
+        }
+        return true
+    }
+    
+    func getKeyboardHeight(_ notification: Notification) -> CGFloat {
+        let userInfo = notification.userInfo
+        let keyboardSize = userInfo![UIKeyboardFrameEndUserInfoKey] as! NSValue
+        return keyboardSize.cgRectValue.height
+    }
+    
+    func keyboardWillShow(notification: Notification) {
+        if bottomTextField.isFirstResponder {
+            bottomTextGapFromToolbar.constant = getKeyboardHeight(notification)
+        }
+    }
+    
+    func keyboardWillHide(notification: Notification) {
+        if bottomTextField.isFirstResponder {
+            bottomTextGapFromToolbar.constant = 32
+        }
+    }
+    
+    func subscribeToKeyboardNotifications() {
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(notification:)), name: NSNotification.Name.UIKeyboardWillShow, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(notification:)), name: NSNotification.Name.UIKeyboardWillHide, object: nil)
+    
+    }
+    
+    func unsubscribeToKeyboardNotifications() {
+        NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillShow, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillHide, object: nil)
     }
 
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
+        
+        if let image = info[UIImagePickerControllerOriginalImage] as? UIImage {
+            imagePickerView.image = image
+            shareMemeButton.isEnabled = true
+        }
+        
+        dismiss(animated: true, completion: nil)
     }
-
+    
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        dismiss(animated: true, completion: nil)
+    }
+    
+    @IBAction func pickAnImage(_ sender: Any) {
+        let pickerController = UIImagePickerController()
+        pickerController.delegate = self
+        pickerController.sourceType = .photoLibrary
+        self.present(pickerController, animated: true, completion: nil)
+    }
+    @IBAction func pickAnImageFromCamera(_ sender: Any) {
+        let pickerController = UIImagePickerController()
+        pickerController.delegate = self
+        pickerController.sourceType = .camera
+        present(pickerController, animated: true, completion: nil)
+    }
 
 }
 
