@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSCameraUsageDescription</key>
+	<string>This app will take a photo if you want a new one from which to create a meme.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app will replicate photos you already have and add memes to it.</string>
 	<key>CFBundleDevelopmentRegion</key>
