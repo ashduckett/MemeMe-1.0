@@ -14,8 +14,12 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     @IBOutlet weak var cameraButton: UIBarButtonItem!
     @IBOutlet weak var topTextField: UITextField!
     @IBOutlet weak var bottomTextField: UITextField!
-    @IBOutlet weak var bottomTextGapFromToolbar: NSLayoutConstraint!
     @IBOutlet weak var shareMemeButton: UIBarButtonItem!
+    @IBOutlet weak var navBar: UINavigationBar!
+    
+    @IBOutlet weak var navBarGapFromTop: NSLayoutConstraint!
+    @IBOutlet weak var toolBar: UIToolbar!
+    
 
     let topPlaceholderText = "TOP"
     let bottomPlaceholderText = "BOTTOM"
@@ -38,7 +42,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
             // Doesn't seem to need help from me to do this. Will leave here since it might be needed later
             // Otherwise you end up with two saved versions when you do a save from the activity view.
-            //    self.save()
+            self.save()
         }
     }
     
@@ -48,11 +52,13 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         let meme = Meme(topText: topTextField.text!, bottomText: bottomTextField.text!, originalImage: imagePickerView.image!, memedImage: memedImage)
         
-        UIImageWriteToSavedPhotosAlbum(meme.memedImage, nil, nil, nil)
-        
     }
     
     func generateMemedImage() -> UIImage {
+        
+        navBar.isHidden = true
+        toolBar.isHidden = true
+        
         UIGraphicsBeginImageContext(self.view.frame.size)
         view.drawHierarchy(in: self.view.frame, afterScreenUpdates: true)
         let memedImage: UIImage = UIGraphicsGetImageFromCurrentImageContext()!
@@ -146,13 +152,15 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     func keyboardWillShow(notification: Notification) {
         if bottomTextField.isFirstResponder {
-            bottomTextGapFromToolbar.constant = getKeyboardHeight(notification)
+            view.frame.origin.y -= getKeyboardHeight(notification)
+            navBarGapFromTop.constant -= getKeyboardHeight(notification)
         }
     }
     
     func keyboardWillHide(notification: Notification) {
         if bottomTextField.isFirstResponder {
-            bottomTextGapFromToolbar.constant = 32
+            view.frame.origin.y += getKeyboardHeight(notification)
+            navBarGapFromTop.constant += getKeyboardHeight(notification)
         }
     }
     
@@ -181,17 +189,18 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         dismiss(animated: true, completion: nil)
     }
     
+    func presentImagePicker(sourceType: UIImagePickerControllerSourceType) {
+        let imagePickerController = UIImagePickerController()
+        imagePickerController.delegate = self
+        imagePickerController.sourceType = sourceType
+        present(imagePickerController, animated: true, completion: nil)
+    }
+    
     @IBAction func pickAnImage(_ sender: Any) {
-        let pickerController = UIImagePickerController()
-        pickerController.delegate = self
-        pickerController.sourceType = .photoLibrary
-        self.present(pickerController, animated: true, completion: nil)
+        presentImagePicker(sourceType: .photoLibrary)
     }
     @IBAction func pickAnImageFromCamera(_ sender: Any) {
-        let pickerController = UIImagePickerController()
-        pickerController.delegate = self
-        pickerController.sourceType = .camera
-        present(pickerController, animated: true, completion: nil)
+        presentImagePicker(sourceType: .camera)
     }
 
 }
