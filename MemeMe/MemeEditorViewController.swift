@@ -56,9 +56,6 @@ class MemeEditorViewController: UIViewController, UIImagePickerControllerDelegat
     }
     
     func generateMemedImage() -> UIImage {
-        
-        //navBar.isHidden = true
-        //toolBar.isHidden = true
         toggleToolAndNavBarVisibility()
         
         UIGraphicsBeginImageContext(self.view.frame.size)
@@ -67,8 +64,6 @@ class MemeEditorViewController: UIViewController, UIImagePickerControllerDelegat
         UIGraphicsEndImageContext()
         
         toggleToolAndNavBarVisibility()
-        //navBar.isHidden = false
-        //toolBar.isHidden = false
         
         return memedImage
     }
@@ -76,10 +71,13 @@ class MemeEditorViewController: UIViewController, UIImagePickerControllerDelegat
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        topTextField.delegate = self
-        bottomTextField.delegate = self
+        //topTextField.delegate = self
+        //bottomTextField.delegate = self
         
         shareMemeButton.isEnabled = false
+        
+        configureTextFields(textField: topTextField)
+        configureTextFields(textField: bottomTextField)
         
         
      
@@ -105,10 +103,14 @@ class MemeEditorViewController: UIViewController, UIImagePickerControllerDelegat
     }
     
     func configureTextFields(textField: UITextField) {
+        textField.delegate = self
         textField.defaultTextAttributes = getTextAttributes()
         
         // The alignment has to be set after the defaultTextAttributes property
         textField.textAlignment = NSTextAlignment.center
+
+        let textForField = (textField == topTextField) ? topPlaceholderText : bottomPlaceholderText
+        textField.attributedPlaceholder = getAttributedString(string: textForField)
     }
     
     
@@ -116,13 +118,6 @@ class MemeEditorViewController: UIViewController, UIImagePickerControllerDelegat
         super.viewWillAppear(animated)
         subscribeToKeyboardNotifications()
         cameraButton.isEnabled = UIImagePickerController.isSourceTypeAvailable(.camera)
-        
-        configureTextFields(textField: topTextField)
-        configureTextFields(textField: bottomTextField)
-        
-        // Set up text attributes
-        topTextField.attributedPlaceholder = getAttributedString(string: topPlaceholderText)
-        bottomTextField.attributedPlaceholder = getAttributedString(string: bottomPlaceholderText)
     }
     
     override func viewWillDisappear(_ animated: Bool) {
