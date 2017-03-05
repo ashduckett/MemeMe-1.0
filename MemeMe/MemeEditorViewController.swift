@@ -50,18 +50,25 @@ class MemeEditorViewController: UIViewController, UIImagePickerControllerDelegat
         
     }
     
+    func toggleToolAndNavBarVisibility() {
+        self.navBar.isHidden = !self.navBar.isHidden
+        self.toolBar.isHidden = !self.toolBar.isHidden
+    }
+    
     func generateMemedImage() -> UIImage {
         
-        navBar.isHidden = true
-        toolBar.isHidden = true
+        //navBar.isHidden = true
+        //toolBar.isHidden = true
+        toggleToolAndNavBarVisibility()
         
         UIGraphicsBeginImageContext(self.view.frame.size)
         view.drawHierarchy(in: self.view.frame, afterScreenUpdates: true)
         let memedImage: UIImage = UIGraphicsGetImageFromCurrentImageContext()!
         UIGraphicsEndImageContext()
         
-        navBar.isHidden = false
-        toolBar.isHidden = false
+        toggleToolAndNavBarVisibility()
+        //navBar.isHidden = false
+        //toolBar.isHidden = false
         
         return memedImage
     }
