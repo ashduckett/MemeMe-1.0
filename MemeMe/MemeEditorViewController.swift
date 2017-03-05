@@ -133,7 +133,6 @@ class MemeEditorViewController: UIViewController, UIImagePickerControllerDelegat
     }
     
     func textFieldShouldEndEditing(_ textField: UITextField) -> Bool {
-        
         if textField.text == "" {
             if bottomTextField.isFirstResponder {
                 bottomTextField.attributedPlaceholder = getAttributedString(string: bottomPlaceholderText)
@@ -151,7 +150,6 @@ class MemeEditorViewController: UIViewController, UIImagePickerControllerDelegat
     }
     
     func keyboardWillShow(notification: Notification) {
-        print("keyboard will show")
         if bottomTextField.isFirstResponder {
             view.frame.origin.y -= getKeyboardHeight(notification)
             navBarGapFromTop.constant -= getKeyboardHeight(notification)
@@ -159,7 +157,6 @@ class MemeEditorViewController: UIViewController, UIImagePickerControllerDelegat
     }
     
     func keyboardWillHide(notification: Notification) {
-        print("keyboard will hide")
         if bottomTextField.isFirstResponder {
             view.frame.origin.y += getKeyboardHeight(notification)
             navBarGapFromTop.constant += getKeyboardHeight(notification)
